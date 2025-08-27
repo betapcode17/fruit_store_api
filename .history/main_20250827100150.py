@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 from models import User,Fruit,Bill,BillDetail
 from database import get_db
 from schemas import FruitResponse,FruitCreate,FruitUpdate
-from sqlalchemy import or_
 app = FastAPI()
 
 
@@ -68,16 +67,4 @@ def detail_fruit(fruit_id:int, db: Session = Depends(get_db)):
 
 
 # find food by keyword
-@app.get("/searchFruit",response_class=list[FruitResponse])
-def search_fruit(keyword: str, db: Session = Depends(get_db)):
-    fruits = db.query(Fruit).filter(
-        or_(
-            Fruit.name.ilike(f"%{keyword}%"),
-            Fruit.description.ilike(f"%{keyword}%")
-        )
-    ).all()
-
-    if not fruits:
-        raise HTTPException(status_code=404, detail="No fruits found")
-
-    return fruits
+@app.get("/searchFruit",response_class=List[])

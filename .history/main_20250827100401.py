@@ -70,14 +70,8 @@ def detail_fruit(fruit_id:int, db: Session = Depends(get_db)):
 # find food by keyword
 @app.get("/searchFruit",response_class=list[FruitResponse])
 def search_fruit(keyword: str, db: Session = Depends(get_db)):
-    fruits = db.query(Fruit).filter(
+    fruit = db.query(Fruit).filter(
         or_(
-            Fruit.name.ilike(f"%{keyword}%"),
-            Fruit.description.ilike(f"%{keyword}%")
+            Fruit.name.ilike("")
         )
-    ).all()
-
-    if not fruits:
-        raise HTTPException(status_code=404, detail="No fruits found")
-
-    return fruits
+    )

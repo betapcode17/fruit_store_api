@@ -78,6 +78,4 @@ def search_fruit(keyword: str, db: Session = Depends(get_db)):
     ).all()
 
     if not fruits:
-        raise HTTPException(status_code=404, detail="No fruits found")
-
-    return fruits
+        
