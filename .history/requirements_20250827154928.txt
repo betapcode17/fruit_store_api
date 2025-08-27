@@ -1,0 +1,14 @@
+1. FastAPI → framework chính để viết API
+pip install fastapi
+2. Uvicorn → server chạy ứng dụng FastAPI
+pip install "uvicorn[standard]"
+3. SQLAlchemy → ORM để làm việc với database
+pip install sqlalchemy
+4. PyMySQL → driver để kết nối MySQL
+pip install pymysql
+5.Pydantic → khai báo schema, validation dữ liệu
+pip install pydantic
+6.email-validator → hỗ trợ cho EmailStr trong Pydantic
+pip install email-validator
+7.passlib[bcrypt] → dùng để mã hoá & verify password
+pip install "passlib[bcrypt]"

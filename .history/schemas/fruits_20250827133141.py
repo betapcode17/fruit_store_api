@@ -1,27 +1,21 @@
 from pydantic import BaseModel
 from typing import Optional
 
-class FruitCreate(BaseModel):
+class FruitBase(BaseModel):
     name: str
-    description: str
-    exist: bool
-    image: str
+    description: Optional[str] = None
     price: float
+
+class FruitCreate(FruitBase):
+    pass
 
 class FruitUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
-    exist: Optional[bool] = None
-    image: Optional[str] = None
     price: Optional[float] = None
 
-class FruitResponse(BaseModel):
+class FruitResponse(FruitBase):
     id: int
-    name: str
-    description: str
-    exist: bool
-    image: str
-    price: float
 
     class Config:
         orm_mode = True
