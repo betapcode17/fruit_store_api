@@ -7,8 +7,6 @@
 #     print("Done!")
 # if __name__ == "__main__":
 #     init_db()
-# uvicorn main:app --reload chay du an
-
 from fastapi import FastAPI,Depends,HTTPException
 from sqlalchemy.orm import Session
 from models import User,Fruit,Bill,BillDetail
