@@ -104,17 +104,7 @@ def ban_acc(user_id: int, db: Session = Depends(get_db) ):
         raise HTTPException(status_code=404, detail= "User not found")
     user.valid = False
     db.commit()
-    db.refresh(user)
     return {"message" : "Ban Account successfully"}
 
 
 # -------- ACTIVE ACC--------
-@router.put("/ActiveAcc/{user_id}")
-def active_acc(user_id:int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail= "User not found")
-    user.valid = True
-    db.commit()
-    db.refresh(user)
-    return {"message" : "Active Account successfully"} 

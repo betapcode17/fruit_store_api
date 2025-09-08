@@ -15,7 +15,7 @@ pip install pydantic
 pip install email-validator
 7.passlib[bcrypt] → dùng để mã hoá & verify password
 pip install "passlib[bcrypt]"
-8. pip install pyserial : thư viện pySerial của Python, thư viện đọc trực tiếp từ cổng nối tiếp
+8. pip install pyserial
 
 
 

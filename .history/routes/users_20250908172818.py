@@ -117,4 +117,4 @@ def active_acc(user_id:int, db: Session = Depends(get_db)):
     user.valid = True
     db.commit()
     db.refresh(user)
-    return {"message" : "Active Account successfully"} 
+    return {"message" : "Ban Account successfully"} 
