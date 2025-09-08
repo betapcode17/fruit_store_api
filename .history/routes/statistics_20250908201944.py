@@ -1,0 +1,8 @@
+from fastapi import APIRouter
+
+router = APIRouter(
+    tags=["Statistics"]
+)
+
+# Get/
+@router.get("")
