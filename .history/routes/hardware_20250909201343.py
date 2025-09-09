@@ -10,6 +10,7 @@ router = APIRouter(
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# 📸 Upload ảnh từ ESP32-CAM
 @router.post("/upload_image")
 async def upload_image(file: UploadFile = File(...)):
     file_id = str(uuid.uuid4())

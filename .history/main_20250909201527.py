@@ -26,6 +26,6 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         while True:
-            await websocket.receive_text()  
+            await websocket.receive_text()  # client có thể gửi "ping"
     except:
         manager.disconnect(websocket)

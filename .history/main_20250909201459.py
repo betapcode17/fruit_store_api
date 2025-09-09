@@ -1,7 +1,7 @@
 
-from fastapi import FastAPI,WebSocket
+from fastapi import FastAPI,websockets
 from routes import bills, fruits, users ,statistics ,hardware  
-from websocket_manager import manager
+from websocket_manager import 
 app = FastAPI(
     title="Fruit Store API",
     description="API for managing fruits, users, bills",
@@ -26,6 +26,6 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         while True:
-            await websocket.receive_text()  
+            await websocket.receive_text()  # client có thể gửi "ping"
     except:
         manager.disconnect(websocket)

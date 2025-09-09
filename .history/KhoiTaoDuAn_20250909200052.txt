@@ -17,7 +17,7 @@ pip install email-validator
 pip install "passlib[bcrypt]"
 8. pip install pyserial : thư viện pySerial của Python, thư viện đọc trực tiếp từ cổng nối tiếp
 9. pip install websockets
-10. pip install python-dotenv : quản lý cấu hình bằng file .env
+10. pip install python-dotenv
 
 # Create database if first
 # from database import Base, engine

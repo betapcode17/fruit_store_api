@@ -10,6 +10,7 @@ router = APIRouter(
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# 📸 Upload ảnh từ ESP32-CAM
 @router.post("/upload_image")
 async def upload_image(file: UploadFile = File(...)):
     file_id = str(uuid.uuid4())
@@ -18,7 +19,7 @@ async def upload_image(file: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    
+    # TODO: Gọi AI detect trái cây
     fruit = "Banana"
     confidence = 0.92
 

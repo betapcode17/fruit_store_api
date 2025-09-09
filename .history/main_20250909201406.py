@@ -1,7 +1,7 @@
 
-from fastapi import FastAPI,WebSocket
+from fastapi import FastAPI
 from routes import bills, fruits, users ,statistics ,hardware  
-from websocket_manager import manager
+
 app = FastAPI(
     title="Fruit Store API",
     description="API for managing fruits, users, bills",
@@ -20,12 +20,3 @@ def root():
     return {"message": "Welcome to Fruit Store API"}
 
 
-# WebSocket endpoint
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
-    try:
-        while True:
-            await websocket.receive_text()  
-    except:
-        manager.disconnect(websocket)
