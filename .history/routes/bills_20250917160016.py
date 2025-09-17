@@ -11,14 +11,18 @@ import pytz
 
 router = APIRouter(tags=["Bills"])
 
-# múi giờ Việt Nam
+# Múi giờ Việt Nam
 VN_TZ = pytz.timezone("Asia/Ho_Chi_Minh")
 
-def to_vn_time(dt: datetime) -> str:
+def get_vn_time(dt: datetime) -> str:
+    """Chuyển UTC datetime sang giờ Việt Nam và format dd-mm-yyyy HH:MM:SS"""
     if dt is None:
         return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=pytz.utc)
     dt_vn = dt.astimezone(VN_TZ)
     return dt_vn.strftime("%d-%m-%Y %H:%M:%S")
+
 
 # POST /bill
 @router.post("/bill", response_model=BillResponse)
@@ -26,11 +30,14 @@ def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
     total_cost = 0
     bill_details_list = []
 
-    bill = Bill(user_id=bill_in.user_id, date=datetime.utcnow())
+    # tạo Bill với giờ VN
+    now_vn = datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(VN_TZ)
+    bill = Bill(user_id=bill_in.user_id, date=now_vn)
     db.add(bill)
     db.commit()
     db.refresh(bill)
 
+    # xử lý từng item
     for item in bill_in.items:
         fruit = db.query(Fruit).filter(Fruit.id == item.fruit_id).first()
         if not fruit:
@@ -63,11 +70,12 @@ def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
 
     return BillResponse(
         bill_id=bill.bill_id,
-        date=to_vn_time(bill.date),
+        date=get_vn_time(bill.date),
         user_id=bill.user_id,
         total_cost=total_cost,
         bill_details=response_details
     )
+
 
 # GET /viewBill/{bill_id}
 @router.get("/viewBill/{bill_id}", response_model=BillResponse)
@@ -88,11 +96,12 @@ def view_bill(bill_id: int, db: Session = Depends(get_db)):
 
     return BillResponse(
         bill_id=bill.bill_id,
-        date=to_vn_time(bill.date),
+        date=get_vn_time(bill.date),
         user_id=bill.user_id,
         total_cost=bill.total_cost,
         bill_details=response_details
     )
+
 
 # GET /ViewAllBill
 @router.get("/ViewAllBill", response_model=List[BillResponse])
@@ -112,84 +121,13 @@ def view_all_bills(db: Session = Depends(get_db)):
         ]
         all_bills.append(BillResponse(
             bill_id=bill.bill_id,
-            date=to_vn_time(bill.date),
+            date=get_vn_time(bill.date),
             user_id=bill.user_id,
             total_cost=bill.total_cost,
             bill_details=details
         ))
 
     return all_bills
-
-
-# UPDATE /bill/{bill_id}
-@router.put("/bill/{bill_id}", response_model=BillResponse)
-def update_bill(bill_id: int, bill_in: BillCreate, db: Session = Depends(get_db)):
-    bill = db.query(Bill).filter(Bill.bill_id == bill_id).first()
-    if not bill:
-        raise HTTPException(status_code=404, detail="Bill not found")
-
-    # Xóa các chi tiết cũ
-    db.query(BillDetail).filter(BillDetail.bill_id == bill_id).delete()
-    db.commit()
-
-    total_cost = 0
-    bill_details_list = []
-
-    for item in bill_in.items:
-        fruit = db.query(Fruit).filter(Fruit.id == item.fruit_id).first()
-        if not fruit:
-            raise HTTPException(status_code=404, detail=f"Fruit ID {item.fruit_id} not found")
-        price = fruit.price * item.weight
-        total_cost += price
-
-        detail = BillDetail(
-            bill_id=bill.bill_id,
-            fruit_id=item.fruit_id,
-            weight=item.weight,
-            price=fruit.price
-        )
-        db.add(detail)
-        bill_details_list.append(detail)
-
-    # Cập nhật thông tin bill
-    bill.user_id = bill_in.user_id
-    bill.total_cost = total_cost
-    db.commit()
-
-    for detail in bill_details_list:
-        db.refresh(detail)
-
-    response_details = [
-        BillDetailResponse(
-            detail_id=d.detail_id,
-            fruit_id=d.fruit_id,
-            fruit_name=db.query(Fruit).filter(Fruit.id == d.fruit_id).first().name,
-            weight=d.weight,
-            price=d.price
-        ) for d in bill_details_list
-    ]
-
-    return BillResponse(
-        bill_id=bill.bill_id,
-        date=to_vn_time(bill.date),
-        user_id=bill.user_id,
-        total_cost=total_cost,
-        bill_details=response_details
-    )
-
-# DELETE /bill/{bill_id}
-@router.delete("/bill/{bill_id}")
-def delete_bill(bill_id: int, db: Session = Depends(get_db)):
-    bill = db.query(Bill).filter(Bill.bill_id == bill_id).first()
-    if not bill:
-        raise HTTPException(status_code=404, detail="Bill not found")
-
-    # Xóa tất cả chi tiết trước khi xóa bill
-    db.query(BillDetail).filter(BillDetail.bill_id == bill_id).delete()
-    db.delete(bill)
-    db.commit()
-    return {"detail": f"Bill {bill_id} deleted successfully"}
-
 
 
 # GET /sales

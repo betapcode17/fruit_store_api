@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import datetime
+from datetime import date
 from .bill_details import BillDetailResponse
 
 class BillItem(BaseModel):
@@ -12,8 +12,8 @@ class BillCreate(BaseModel):
     items: List[BillItem]
 
 class BillResponse(BaseModel):
-    bill_id: int
-    date: Optional[str]  # chuyển sang str sau khi format giờ VN
+    bill_id: int          # thêm ID tự sinh
+    date: Optional[date]
     user_id: int
     total_cost: float
     bill_details: List[BillDetailResponse] = []

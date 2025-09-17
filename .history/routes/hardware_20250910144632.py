@@ -15,7 +15,7 @@ async def upload_image(file: UploadFile = File(...)):
     file_id = str(uuid.uuid4())
     file_path = os.path.join(UPLOAD_DIR, f"{file_id}.jpg")
 
-   
+    # Log thông tin file
     content = await file.read()
     print(f"Received file: {file.filename}, size: {len(content)} bytes")
     await file.seek(0)  # Reset con trỏ file về đầu

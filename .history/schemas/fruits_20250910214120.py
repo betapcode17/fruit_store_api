@@ -5,14 +5,14 @@ from datetime import date
 class FruitCreate(BaseModel):
     name: str
     description: str
-    quantity: int
+    quantity: bool
     image: str
     price: float
 
 class FruitUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
-    quantity: Optional[int] = None
+    exist: Optional[bool] = None
     image: Optional[str] = None
     price: Optional[float] = None
 
@@ -20,7 +20,7 @@ class FruitResponse(BaseModel):
     id: int
     name: str
     description: str
-    quantity: int
+    exist: bool
     image: str
     price: float
 

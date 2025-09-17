@@ -121,74 +121,11 @@ def view_all_bills(db: Session = Depends(get_db)):
     return all_bills
 
 
-# UPDATE /bill/{bill_id}
-@router.put("/bill/{bill_id}", response_model=BillResponse)
-def update_bill(bill_id: int, bill_in: BillCreate, db: Session = Depends(get_db)):
-    bill = db.query(Bill).filter(Bill.bill_id == bill_id).first()
-    if not bill:
-        raise HTTPException(status_code=404, detail="Bill not found")
 
-    # Xóa các chi tiết cũ
-    db.query(BillDetail).filter(BillDetail.bill_id == bill_id).delete()
-    db.commit()
+# UPDATE / Update BILLS
 
-    total_cost = 0
-    bill_details_list = []
 
-    for item in bill_in.items:
-        fruit = db.query(Fruit).filter(Fruit.id == item.fruit_id).first()
-        if not fruit:
-            raise HTTPException(status_code=404, detail=f"Fruit ID {item.fruit_id} not found")
-        price = fruit.price * item.weight
-        total_cost += price
-
-        detail = BillDetail(
-            bill_id=bill.bill_id,
-            fruit_id=item.fruit_id,
-            weight=item.weight,
-            price=fruit.price
-        )
-        db.add(detail)
-        bill_details_list.append(detail)
-
-    # Cập nhật thông tin bill
-    bill.user_id = bill_in.user_id
-    bill.total_cost = total_cost
-    db.commit()
-
-    for detail in bill_details_list:
-        db.refresh(detail)
-
-    response_details = [
-        BillDetailResponse(
-            detail_id=d.detail_id,
-            fruit_id=d.fruit_id,
-            fruit_name=db.query(Fruit).filter(Fruit.id == d.fruit_id).first().name,
-            weight=d.weight,
-            price=d.price
-        ) for d in bill_details_list
-    ]
-
-    return BillResponse(
-        bill_id=bill.bill_id,
-        date=to_vn_time(bill.date),
-        user_id=bill.user_id,
-        total_cost=total_cost,
-        bill_details=response_details
-    )
-
-# DELETE /bill/{bill_id}
-@router.delete("/bill/{bill_id}")
-def delete_bill(bill_id: int, db: Session = Depends(get_db)):
-    bill = db.query(Bill).filter(Bill.bill_id == bill_id).first()
-    if not bill:
-        raise HTTPException(status_code=404, detail="Bill not found")
-
-    # Xóa tất cả chi tiết trước khi xóa bill
-    db.query(BillDetail).filter(BillDetail.bill_id == bill_id).delete()
-    db.delete(bill)
-    db.commit()
-    return {"detail": f"Bill {bill_id} deleted successfully"}
+# DELETE / DELETE BILLS 
 
 
 
