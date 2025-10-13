@@ -5,7 +5,7 @@ import time
 import os
 
 # URL snapshot của ESP32-CAM 
-url = "http://192.168.1.21/cam-lo.jpg"
+url = "http://192.168.1.22/cam-lo.jpg"
 
 # Thư mục lưu ảnh
 save_folder = "snapshots"

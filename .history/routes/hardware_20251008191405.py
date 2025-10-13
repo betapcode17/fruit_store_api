@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 import shutil, os, uuid
 import httpx  # để gửi dữ liệu lên web server
 from websocket_manager import manager
-from fastapi import APIRouter, Body
+
 app = FastAPI(
     title="Fruit & Hardware API",
     description="API for managing fruits, hardware, and weights",

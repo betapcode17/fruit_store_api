@@ -1,25 +1,7 @@
-from fastapi import FastAPI, APIRouter, UploadFile, File, Form, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, UploadFile, File, Form
 import shutil, os, uuid
-import httpx  # để gửi dữ liệu lên web server
 from websocket_manager import manager
-from fastapi import APIRouter, Body
-app = FastAPI(
-    title="Fruit & Hardware API",
-    description="API for managing fruits, hardware, and weights",
-    version="1.0.0"
-)
 
-# Cho phép ESP8266 truy cập
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# --- Router Hardware ---
 router = APIRouter(
     prefix="/hardware",
     tags=["Hardware"]
@@ -49,9 +31,10 @@ async def upload_image(
     else:
         print(f"Failed to save file at: {file_path}")
 
+    # Kết quả trả về, fruit và confidence để trống tạm
     result = {
-        "fruit": "",
-        "confidence": None,
+        "fruit": "",          # Chưa xác định, có thể cập nhật sau
+        "confidence": None,   # Chưa xác định
         "file_path": file_path,
         "name": name
     }
@@ -75,15 +58,3 @@ async def get_weight():
     })
 
     return data
-
-
-@router.post("/weight")
-async def receive_weight_from_hardware(weight: float = Body(..., embed=True)):
-    """
-    Nhận dữ liệu cân từ ESP8266 và trả về kết quả trực tiếp.
-    Tham số truyền vào: weight
-    """
-    print(f"📦 Nhận từ ESP8266: {weight} kg")
-
-    # Trả về chuỗi trực tiếp
-    return {"result": f"Cân nhận được: {weight} kg"}

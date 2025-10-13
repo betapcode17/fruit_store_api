@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 import shutil, os, uuid
 import httpx  # để gửi dữ liệu lên web server
 from websocket_manager import manager
-from fastapi import APIRouter, Body
+
 app = FastAPI(
     title="Fruit & Hardware API",
     description="API for managing fruits, hardware, and weights",
@@ -77,13 +77,17 @@ async def get_weight():
     return data
 
 
+
 @router.post("/weight")
-async def receive_weight_from_hardware(weight: float = Body(..., embed=True)):
+async def receive_weight_from_hardware(request: Request):
     """
-    Nhận dữ liệu cân từ ESP8266 và trả về kết quả trực tiếp.
-    Tham số truyền vào: weight
+    Nhận dữ liệu cân từ phần cứng và trả về ngay
     """
+    data = await request.json()
+    weight = data.get("weight", None)
     print(f"📦 Nhận từ ESP8266: {weight} kg")
 
-    # Trả về chuỗi trực tiếp
-    return {"result": f"Cân nhận được: {weight} kg"}
+    # Broadcast nếu cần
+    # await manager.broadcast({"type": "weight", "data": {"weight": weight}})
+
+    return {"status": "ok", "received": weight}
