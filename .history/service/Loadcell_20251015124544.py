@@ -1,21 +1,25 @@
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, emit
+from routes.hardware import hardware_router  
 import threading
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+# Đăng ký router (Blueprint)
+app.register_blueprint(hardware_router)
+
 current_weight = None
 lock = threading.Lock()
 
+# =====================================================
+# 🚀 ESP8266 gửi dữ liệu cân
+# =====================================================
 @app.route('/weight', methods=['POST'])
 def receive_weight():
-    """
-    Nhận dữ liệu từ ESP8266 (POST JSON: {"weight": 2.5})
-    """
     global current_weight
     data = request.get_json()
-    weight = data.get('weight')
+    weight = data.get('weight', None)
 
     if weight is None:
         return jsonify({"error": "Missing weight"}), 400
@@ -23,35 +27,31 @@ def receive_weight():
     with lock:
         current_weight = weight
 
-    print("=" * 40)
+    print("=" * 50)
     print(f"📦 Nhận từ ESP8266: {weight} kg")
-    print("=" * 40)
+    print("=" * 50)
 
-    # Gửi dữ liệu realtime đến WebSocket client (nếu có)
+    # ✅ Gửi realtime tới client qua WebSocket
     socketio.emit('new_weight', {'weight': weight})
 
     return jsonify({"status": "ok", "received": weight}), 200
 
 
-@app.route('/weight', methods=['GET'])
-def get_weight():
-    """
-    Cho phép FastAPI hoặc Web lấy cân hiện tại
-    """
-    if current_weight is None:
-        return jsonify({"weight": None, "message": "Chưa có dữ liệu cân"})
-    return jsonify({"weight": current_weight})
-
-
+# =====================================================
+# 🔗 WebSocket events
+# =====================================================
 @socketio.on('connect')
-def on_connect():
+def handle_connect():
     print("🔗 Web client đã kết nối!")
     emit('connected', {'message': 'WebSocket connected!'})
 
 @socketio.on('disconnect')
-def on_disconnect():
+def handle_disconnect():
     print("❌ Web client ngắt kết nối!")
 
 
+# =====================================================
+# 🏁 Chạy server Flask + WebSocket
+# =====================================================
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000)
