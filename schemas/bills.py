@@ -9,12 +9,14 @@ class BillItem(BaseModel):
 
 class BillCreate(BaseModel):
     user_id: int
+    cus_id: int  # thêm cus_id
     items: List[BillItem]
 
 class BillResponse(BaseModel):
     bill_id: int
     date: Optional[str]  # chuyển sang str sau khi format giờ VN
     user_id: int
+    cus_id: int  # thêm cus_id
     total_cost: float
     bill_details: List[BillDetailResponse] = []
 
