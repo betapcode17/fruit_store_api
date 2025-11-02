@@ -66,8 +66,8 @@ async def upload_result(
         }, status_code=500)
 
 
-
-@router.get("/files/latest", summary="Lấy file JSON và ảnh mới nhất")
+# 🟢 GET /api/files/latest — Trả JSON + ảnh mới nhất
+@router.get("/files/latest", summary="Trả về JSON và ảnh mới nhất")
 async def get_latest_file():
     try:
         # 🟡 1. Lấy danh sách file JSON
@@ -77,46 +77,52 @@ async def get_latest_file():
             if f.endswith(".json")
         ]
 
-        # 🟡 2. Lấy file JSON mới nhất (nếu có)
+        # 🟡 2. Lấy JSON mới nhất (nếu có)
         latest_json = max(json_files, key=os.path.getmtime) if json_files else None
         json_data = None
         if latest_json:
             with open(latest_json, "r", encoding="utf-8") as f:
                 json_data = json.load(f)
 
-        # 🟢 3. Lấy file ảnh mới nhất trong thư mục uploads
+        # 🟢 3. Lấy ảnh mới nhất trong thư mục uploads
         image_files = glob.glob(os.path.join(UPLOAD_DIR, "*.png")) + \
                       glob.glob(os.path.join(UPLOAD_DIR, "*.jpg")) + \
                       glob.glob(os.path.join(UPLOAD_DIR, "*.jpeg"))
-
         latest_image = max(image_files, key=os.path.getmtime) if image_files else None
-
-        # 🟣 4. Chuẩn bị phản hồi
-        response = {
-            "status": "success",
-            "latest_json_file": os.path.basename(latest_json) if latest_json else None,
-            "json_content": json_data,
-            "latest_image_file": os.path.basename(latest_image) if latest_image else None,
-            "latest_image_url": f"/api/files/image/{os.path.basename(latest_image)}" if latest_image else None
-        }
 
         # 🧩 Nếu không có file nào thì báo lỗi
         if not latest_json and not latest_image:
-            return JSONResponse(content={"status": "error", "detail": "No files found"}, status_code=404)
+            return JSONResponse(
+                content={"status": "error", "detail": "No files found"},
+                status_code=404
+            )
 
-        return JSONResponse(content=response)
+        # 🟣 Nếu người dùng chỉ muốn JSON
+        if not latest_image:
+            return JSONResponse(content={
+                "status": "success",
+                "latest_json_file": os.path.basename(latest_json),
+                "json_content": json_data,
+                "latest_image_file": None
+            })
+
+        # 🟢 Nếu có cả JSON và ảnh → trả ảnh về trực tiếp
+        # Đồng thời gửi header chứa JSON meta để frontend đọc
+        headers = {
+            "X-Latest-JSON-File": os.path.basename(latest_json) if latest_json else "",
+            "X-Latest-Image-File": os.path.basename(latest_image),
+            "X-JSON-Content": json.dumps(json_data, ensure_ascii=False) if json_data else "{}"
+        }
+
+        return FileResponse(
+            latest_image,
+            media_type="image/jpeg",
+            filename=os.path.basename(latest_image),
+            headers=headers
+        )
 
     except Exception as e:
-        return JSONResponse(content={"status": "error", "detail": str(e)}, status_code=500)
-    
-
-@router.get("/files/image/{filename}", summary="Trả về ảnh theo tên file")
-async def get_image(filename: str):
-    image_path = os.path.join(UPLOAD_DIR, filename)
-
-    # 🟡 Kiểm tra file tồn tại
-    if not os.path.exists(image_path):
-        return JSONResponse(content={"status": "error", "detail": "Image not found"}, status_code=404)
-
-    # 🟢 Trả ảnh về client
-    return FileResponse(image_path, media_type="image/jpeg")
+        return JSONResponse(
+            content={"status": "error", "detail": str(e)},
+            status_code=500
+        )

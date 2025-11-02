@@ -25,13 +25,13 @@ def to_vn_time(dt: datetime) -> str:
     return dt_vn.strftime("%d-%m-%Y %H:%M:%S")
 
 
-# POST /bill — thêm Bill và Customer
+# ✅ POST /bill — thêm Bill và Customer
 @router.post("/bill", response_model=BillResponse)
 def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
     total_cost = 0
     bill_details_list = []
 
-    #  1. Tạo Customer mới
+    # 🔹 1. Tạo Customer mới
     customer_data = bill_in.customer
     new_customer = Customer(
         name=customer_data.name,
@@ -43,7 +43,7 @@ def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_customer)
 
-    #  2. Tạo Bill
+    # 🔹 2. Tạo Bill
     bill = Bill(
         user_id=bill_in.user_id,
         date=datetime.utcnow(),
@@ -54,7 +54,7 @@ def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(bill)
 
-    #  3. Thêm chi tiết Bill (BillDetail)
+    # 🔹 3. Thêm chi tiết Bill (BillDetail)
     for item in bill_in.items:
         fruit = db.query(Fruit).filter(Fruit.id == item.fruit_id).first()
         if not fruit:
@@ -72,7 +72,7 @@ def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
         db.add(detail)
         bill_details_list.append(detail)
 
-    #  4. Cập nhật total_cost và moneySpent
+    # 🔹 4. Cập nhật total_cost và moneySpent
     bill.total_cost = total_cost
     new_customer.moneySpent += total_cost
     db.commit()
@@ -80,7 +80,7 @@ def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
     for detail in bill_details_list:
         db.refresh(detail)
 
-    #  5. Chuẩn bị dữ liệu trả về
+    # 🔹 5. Chuẩn bị dữ liệu trả về
     response_details = [
         BillDetailResponse(
             detail_id=d.detail_id,
@@ -101,7 +101,7 @@ def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
     )
 
 
-#  GET /ViewAllBill — xem tất cả hóa đơn
+# ✅ GET /ViewAllBill — xem tất cả hóa đơn
 @router.get("/ViewAllBill", response_model=List[BillResponse])
 def view_all_bills(db: Session = Depends(get_db)):
     bills = db.query(Bill).all()
@@ -131,7 +131,7 @@ def view_all_bills(db: Session = Depends(get_db)):
     return all_bills
 
 
-#  PUT /bill/{bill_id} — cập nhật hóa đơn
+# ✅ PUT /bill/{bill_id} — cập nhật hóa đơn
 @router.put("/bill/{bill_id}", response_model=BillResponse)
 def update_bill(bill_id: int, bill_in: BillCreate, db: Session = Depends(get_db)):
     bill = db.query(Bill).filter(Bill.bill_id == bill_id).first()
@@ -188,7 +188,7 @@ def update_bill(bill_id: int, bill_in: BillCreate, db: Session = Depends(get_db)
     )
 
 
-# DELETE /bill/{bill_id} — xóa hóa đơn
+# ✅ DELETE /bill/{bill_id} — xóa hóa đơn
 @router.delete("/bill/{bill_id}")
 def delete_bill(bill_id: int, db: Session = Depends(get_db)):
     bill = db.query(Bill).filter(Bill.bill_id == bill_id).first()
@@ -201,7 +201,7 @@ def delete_bill(bill_id: int, db: Session = Depends(get_db)):
     return {"detail": f"Bill {bill_id} deleted successfully"}
 
 
-#  GET /sales — tổng doanh thu
+# ✅ GET /sales — tổng doanh thu
 @router.get("/sales")
 def total_sales(db: Session = Depends(get_db)):
     total = db.query(func.sum(Bill.total_cost)).scalar() or 0

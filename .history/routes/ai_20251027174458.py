@@ -6,7 +6,7 @@ import uuid
 import json
 import os
 import glob
-from fastapi.responses import FileResponse
+
 
 
 router = APIRouter(prefix="/api", tags=["AI Upload"])
@@ -108,15 +108,3 @@ async def get_latest_file():
 
     except Exception as e:
         return JSONResponse(content={"status": "error", "detail": str(e)}, status_code=500)
-    
-
-@router.get("/files/image/{filename}", summary="Trả về ảnh theo tên file")
-async def get_image(filename: str):
-    image_path = os.path.join(UPLOAD_DIR, filename)
-
-    # 🟡 Kiểm tra file tồn tại
-    if not os.path.exists(image_path):
-        return JSONResponse(content={"status": "error", "detail": "Image not found"}, status_code=404)
-
-    # 🟢 Trả ảnh về client
-    return FileResponse(image_path, media_type="image/jpeg")
