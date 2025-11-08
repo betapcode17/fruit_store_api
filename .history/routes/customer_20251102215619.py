@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from sqlalchemy import or_
@@ -61,15 +61,16 @@ def update_cus(cus_id: int, cus_in: CustomerUpdate, db: Session = Depends(get_db
 
 
 # GET /customer/search?keyword=... — Tìm kiếm khách hàng
-@router.get("/search/{phone}", response_model=List[CustomerResponse])
-def search_customer(phone: str, db: Session = Depends(get_db)):
-    customers = (
-        db.query(Customer)
-        .filter(Customer.phone.ilike(f"%{phone}%"))  # tìm theo chuỗi con trong số điện thoại
-        .all()
-    )
+@router.get("/search", response_model=List[CustomerResponse])
+def search_customer(keyword: str, db: Session = Depends(get_db)):
+    customers = db.query(Customer).filter(
+        or_(
+            Customer.name.ilike(f"%{keyword}%"),
+            Customer.phone.ilike(f"%{keyword}%"),
+            Customer.address.ilike(f"%{keyword}%")
+        )
+    ).all()
 
     if not customers:
         raise HTTPException(status_code=404, detail="No customer found")
-
     return customers

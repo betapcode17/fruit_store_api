@@ -21,3 +21,5 @@ async def get_weight_from_flask():
         return JSONResponse(content=data)
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
+
+

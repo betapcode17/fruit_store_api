@@ -11,7 +11,6 @@ class BillResponse(BaseModel):
     bill_id: int
     date: str
     user_id: int
-    cus_id: int
     total_cost: float
     bill_details: List[BillDetailResponse]   
 

@@ -22,3 +22,7 @@ def get_db():
         db.close()
 
 
+from database import engine, Base
+
+Base.metadata.drop_all(bind=engine)   # Xóa tất cả bảng cũ
+Base.metadata.create_all(bind=engine) # Tạo lại theo model mới

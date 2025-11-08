@@ -17,29 +17,36 @@ router = APIRouter(tags=["Bills"])
 
 
 
-# POST /bill — thêm Bill 
+# POST /bill — thêm Bill và Customer
 @router.post("/bill", response_model=BillResponse)
 def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
     total_cost = 0
     bill_details_list = []
 
-    # 1️⃣ Kiểm tra Customer tồn tại
-    customer = db.query(Customer).filter(Customer.cus_id == bill_in.cus_id).first()
-    if not customer:
-        raise HTTPException(status_code=404, detail=f"Customer ID {bill_in.cus_id} not found")
+    #  1. Tạo Customer mới
+    customer_data = bill_in.customer
+    new_customer = Customer(
+        name=customer_data.name,
+        phone=customer_data.phone,
+        address=customer_data.address,
+        moneySpent=0  # ban đầu = 0, cộng sau khi tính bill
+    )
+    db.add(new_customer)
+    db.commit()
+    db.refresh(new_customer)
 
-    # 2️⃣ Tạo Bill mới
+    #  2. Tạo Bill
     bill = Bill(
         user_id=bill_in.user_id,
         date=datetime.utcnow(),
         total_cost=0,
-        cus_id=bill_in.cus_id
+        cus_id=new_customer.cus_id
     )
     db.add(bill)
     db.commit()
     db.refresh(bill)
 
-    # 3️⃣ Thêm chi tiết Bill
+    #  3. Thêm chi tiết Bill (BillDetail)
     for item in bill_in.items:
         fruit = db.query(Fruit).filter(Fruit.id == item.fruit_id).first()
         if not fruit:
@@ -57,15 +64,15 @@ def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
         db.add(detail)
         bill_details_list.append(detail)
 
-    # 4️⃣ Cập nhật tổng tiền
+    #  4. Cập nhật total_cost và moneySpent
     bill.total_cost = total_cost
-    customer.moneySpent += total_cost
+    new_customer.moneySpent += total_cost
     db.commit()
 
-    for d in bill_details_list:
-        db.refresh(d)
+    for detail in bill_details_list:
+        db.refresh(detail)
 
-    # 5️⃣ Chuẩn bị dữ liệu trả về
+    #  5. Chuẩn bị dữ liệu trả về
     response_details = [
         BillDetailResponse(
             detail_id=d.detail_id,
@@ -79,12 +86,12 @@ def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
 
     return BillResponse(
         bill_id=bill.bill_id,
-        date=str(bill.date),  # bỏ to_vn_time nếu gây lỗi
+        date=to_vn_time(bill.date),
         user_id=bill.user_id,
-        cus_id= bill.cus_id,
         total_cost=total_cost,
         bill_details=response_details
     )
+
 
 #  GET /ViewAllBill — xem tất cả hóa đơn
 @router.get("/ViewAllBill", response_model=List[BillResponse])
@@ -111,7 +118,6 @@ def view_all_bills(db: Session = Depends(get_db)):
                 bill_id=bill.bill_id,
                 date=str(bill.date),  # chỉ cần chuyển sang string
                 user_id=bill.user_id,
-                cus_id= bill.cus_id,
                 total_cost=bill.total_cost,
                 bill_details=details
             )
@@ -163,7 +169,6 @@ def update_bill(bill_id: int, bill_in: BillCreate, db: Session = Depends(get_db)
             detail_id=d.detail_id,
             fruit_id=d.fruit_id,
             fruit_name=db.query(Fruit).filter(Fruit.id == d.fruit_id).first().name,
-            
             weight=d.weight,
             price=d.price
         )
@@ -172,9 +177,8 @@ def update_bill(bill_id: int, bill_in: BillCreate, db: Session = Depends(get_db)
 
     return BillResponse(
         bill_id=bill.bill_id,
-        date=str(bill.date), 
+        date=to_vn_time(bill.date),
         user_id=bill.user_id,
-        cus_id= bill.cus_id,
         total_cost=total_cost,
         bill_details=response_details
     )

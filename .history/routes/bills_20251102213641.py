@@ -81,7 +81,6 @@ def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
         bill_id=bill.bill_id,
         date=str(bill.date),  # bỏ to_vn_time nếu gây lỗi
         user_id=bill.user_id,
-        cus_id= bill.cus_id,
         total_cost=total_cost,
         bill_details=response_details
     )
@@ -111,7 +110,6 @@ def view_all_bills(db: Session = Depends(get_db)):
                 bill_id=bill.bill_id,
                 date=str(bill.date),  # chỉ cần chuyển sang string
                 user_id=bill.user_id,
-                cus_id= bill.cus_id,
                 total_cost=bill.total_cost,
                 bill_details=details
             )
@@ -163,7 +161,6 @@ def update_bill(bill_id: int, bill_in: BillCreate, db: Session = Depends(get_db)
             detail_id=d.detail_id,
             fruit_id=d.fruit_id,
             fruit_name=db.query(Fruit).filter(Fruit.id == d.fruit_id).first().name,
-            
             weight=d.weight,
             price=d.price
         )
@@ -172,9 +169,8 @@ def update_bill(bill_id: int, bill_in: BillCreate, db: Session = Depends(get_db)
 
     return BillResponse(
         bill_id=bill.bill_id,
-        date=str(bill.date), 
+        date=to_vn_time(bill.date),
         user_id=bill.user_id,
-        cus_id= bill.cus_id,
         total_cost=total_cost,
         bill_details=response_details
     )
