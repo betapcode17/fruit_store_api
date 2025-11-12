@@ -1,6 +1,6 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from routes import bills, fruits, users, statistics, hardware ,ai,customer
+from routes import bills, fruits, users, statistics, hardware ,ai,customer,auth
 from fastapi.staticfiles import StaticFiles
 
 # Mount thư mục uploads để truy cập qua /files/image
@@ -41,6 +41,7 @@ app.mount("/files/image", StaticFiles(directory="uploads"), name="uploads")
 # Include Routers
 # =========================
 app.include_router(fruits.router)
+app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(customer.router)
 app.include_router(bills.router)

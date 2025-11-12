@@ -31,3 +31,19 @@ pip install "passlib[bcrypt]"
 #     init_db()
 # uvicorn main:app --reload chay du an
 # lt --port 8000 --subdomain yoursubdomain
+
+
+{
+  "id": 5,
+  "email": "quocdat19991712@gmail.com",
+  "name": "Tran Dat",
+  "phone": "09868828182",
+  "address": "Da Nang",
+  "birth": "2005-11-12",
+  "gender": true,
+  "username": "trandat",
+  "role": true,
+  "valid": true
+}
+
+password : QuocDat17122005
