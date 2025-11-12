@@ -1,7 +1,9 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from routes import bills, fruits, users, statistics, hardware ,ai,customer
+from fastapi.staticfiles import StaticFiles
 
+# Mount thư mục uploads để truy cập qua /files/image
 
 # =========================
 # WebSocket Manager
@@ -34,6 +36,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
+app.mount("/files/image", StaticFiles(directory="uploads"), name="uploads")
 # =========================
 # Include Routers
 # =========================

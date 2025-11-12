@@ -4,20 +4,17 @@ from sqlalchemy import func
 from typing import List
 from datetime import datetime
 import pytz
-
+import shutil
 from database import get_db
 from models import Bill, BillDetail, Fruit, Customer
 from schemas.bills import BillCreate, BillResponse
 from schemas.bill_details import BillDetailResponse
 from schemas.customer import CustomerResponse
-
+import os, json, glob, re
 router = APIRouter(tags=["Bills"])
 
+import shutil
 
-
-
-
-# POST /bill — thêm Bill 
 @router.post("/bill", response_model=BillResponse)
 def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
     total_cost = 0
@@ -77,11 +74,21 @@ def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
         for d in bill_details_list
     ]
 
+    # 6️⃣ ✅ Xóa toàn bộ file trong thư mục json_results và uploads sau khi tạo bill thành công
+    JSON_DIR = "json_results"
+    UPLOAD_DIR = "uploads"
+
+    for folder in [JSON_DIR, UPLOAD_DIR]:
+        for file in os.listdir(folder):
+            file_path = os.path.join(folder, file)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+
     return BillResponse(
         bill_id=bill.bill_id,
-        date=str(bill.date),  # bỏ to_vn_time nếu gây lỗi
+        date=str(bill.date),
         user_id=bill.user_id,
-        cus_id= bill.cus_id,
+        cus_id=bill.cus_id,
         total_cost=total_cost,
         bill_details=response_details
     )
