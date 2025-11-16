@@ -3,11 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes import bills, fruits, users, statistics, hardware ,ai,customer,auth
 from fastapi.staticfiles import StaticFiles
 
-# Mount thư mục uploads để truy cập qua /files/image
 
-# =========================
-# WebSocket Manager
-# =========================
 class ConnectionManager:
     def __init__(self):
         self.active_connections: list[WebSocket] = []
@@ -27,9 +23,7 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-# =========================
-# FastAPI App
-# =========================
+
 app = FastAPI(
     title="Fruit Store API",
     description="API for managing fruits, users, bills",
@@ -37,9 +31,6 @@ app = FastAPI(
 )
 
 app.mount("/files/image", StaticFiles(directory="uploads"), name="uploads")
-# =========================
-# Include Routers
-# =========================
 app.include_router(fruits.router)
 app.include_router(auth.router)
 app.include_router(users.router)
@@ -50,16 +41,11 @@ app.include_router(hardware.router)
 app.include_router(ai.router)
 
 
-# =========================
-# Root Endpoint
-# =========================
 @app.get("/")
 def root():
     return {"message": "Welcome to Fruit Store API"}
 
-# =========================
-# WebSocket Endpoint
-# =========================
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
@@ -72,12 +58,10 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
 
-# =========================
-# CORS Middleware
-# =========================
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Dev only. In production, specify allowed origins
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
