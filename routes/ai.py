@@ -52,18 +52,75 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 
+# @router.post("/api/upload_result", summary="Nhận ảnh + JSON detections từ client")
+# async def upload_result(
+#     file: UploadFile = File(...),
+#     data: str = Form(...)
+# ):
+#     try:
+       
+#         json_data = json.loads(data)
+#         detections = json_data.get("detections", [])
+#         counts = json_data.get("counts", {})
+
+        
+#         if detections:
+#             main_class = max(detections, key=lambda x: x.get("confidence", 0)).get("class", "unknown")
+#             count_for_class = counts.get(main_class, 0)
+#         else:
+#             main_class = "unknown"
+#             count_for_class = 0
+
+       
+#         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        
+#         file_ext = os.path.splitext(file.filename)[1]
+#         image_filename = f"{main_class}_{count_for_class}_{timestamp}{file_ext}"
+#         image_path = os.path.join(UPLOAD_DIR, image_filename)
+#         with open(image_path, "wb") as f:
+#             f.write(await file.read())
+
+#         json_filename = f"{main_class}_{count_for_class}_{timestamp}.json"
+#         json_path = os.path.join(JSON_DIR, json_filename)
+#         with open(json_path, "w", encoding="utf-8") as f:
+#             json.dump(json_data, f, ensure_ascii=False, indent=4)
+
+       
+#         final_count = sum(counts.values()) if counts else len(detections)
+
+       
+#         return JSONResponse(content={
+#             "status": "success",
+#             "message": "Image and JSON saved successfully",
+#             "image_path": image_path,
+#             "json_path": json_path,
+#             "detections_count": final_count,
+#             "json_content": json_data
+#         })
+
+#     except Exception as e:
+#         return JSONResponse(content={
+#             "status": "error",
+#             "detail": str(e)
+#         }, status_code=500)
+
+
 @router.post("/api/upload_result", summary="Nhận ảnh + JSON detections từ client")
 async def upload_result(
     file: UploadFile = File(...),
     data: str = Form(...)
 ):
     try:
-       
+        # Parse JSON
         json_data = json.loads(data)
         detections = json_data.get("detections", [])
         counts = json_data.get("counts", {})
 
-        
+        # Lấy cân nặng nếu client gửi (vd: "weight": 65.2)
+        weight = json_data.get("weight", None)
+
+        # Lấy class chính
         if detections:
             main_class = max(detections, key=lambda x: x.get("confidence", 0)).get("class", "unknown")
             count_for_class = counts.get(main_class, 0)
@@ -71,31 +128,33 @@ async def upload_result(
             main_class = "unknown"
             count_for_class = 0
 
-       
+        # Tạo tên file
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-        
         file_ext = os.path.splitext(file.filename)[1]
+
         image_filename = f"{main_class}_{count_for_class}_{timestamp}{file_ext}"
         image_path = os.path.join(UPLOAD_DIR, image_filename)
         with open(image_path, "wb") as f:
             f.write(await file.read())
+
+        # Ghi JSON (bao gồm cân nặng)
+        json_data["weight"] = weight   # 👈 Thêm cân nặng vào JSON
 
         json_filename = f"{main_class}_{count_for_class}_{timestamp}.json"
         json_path = os.path.join(JSON_DIR, json_filename)
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(json_data, f, ensure_ascii=False, indent=4)
 
-       
+        # Tổng số đối tượng
         final_count = sum(counts.values()) if counts else len(detections)
 
-       
         return JSONResponse(content={
             "status": "success",
             "message": "Image and JSON saved successfully",
             "image_path": image_path,
             "json_path": json_path,
             "detections_count": final_count,
+            "weight": weight,
             "json_content": json_data
         })
 
@@ -104,8 +163,6 @@ async def upload_result(
             "status": "error",
             "detail": str(e)
         }, status_code=500)
-
-
 
 
 
@@ -127,16 +184,27 @@ def analyze_files(base_url: str = "https://yoursubdomain.loca.lt"):
         count = int(match.group("count"))
         timestamp = match.group("timestamp")
 
-        # Nếu class đã tồn tại, cập nhật count/timestamp nếu khác
+        # ---- Đọc JSON để lấy weight ----
+        json_path = os.path.join(JSON_DIR, jf)
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                json_data = json.load(f)
+            weight = json_data.get("weight", None)
+        except:
+            weight = None
+
+        # ---- Lưu dữ liệu theo class ----
         if class_name in results:
             if results[class_name]["count"] != count:
                 results[class_name]["count"] = count
                 results[class_name]["timestamp"] = timestamp
+                results[class_name]["weight"] = weight
         else:
             results[class_name] = {
                 "count": count,
                 "timestamp": timestamp,
-                "json_file": jf
+                "json_file": jf,
+                "weight": weight
             }
 
         # ---- Lấy ảnh tương ứng ----
@@ -154,6 +222,7 @@ def analyze_files(base_url: str = "https://yoursubdomain.loca.lt"):
     results = {k: v for k, v in results.items() if k.lower() != "unknown"}
 
     return results
+
 
 
 

@@ -8,7 +8,7 @@ from core.security import get_current_user
 router = APIRouter(
     prefix="/user",
     tags=["User"],
-    dependencies=[Depends(get_current_user)]  #  tất cả API trong router này đều cần JWT
+  
 )
 
 
