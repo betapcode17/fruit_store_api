@@ -13,17 +13,17 @@ router = APIRouter(
 
 
 @router.get("/me", response_model=UserResponse)
-def read_my_profile(current_user: User = Depends(get_current_user)):
+async def read_my_profile(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-@router.get("/profiles", response_model=list[UserResponse])
-def view_all_profiles(db: Session = Depends(get_db)):
+@router.get("/", response_model=list[UserResponse])
+async def view_all_profiles(db: Session = Depends(get_db)):
     return db.query(User).all()
 
 
 @router.put("/profile/{user_id}", response_model=UserResponse)
-def update_profile(user_id: int, user_in: UserUpdate, db: Session = Depends(get_db)):
+async def update_profile(user_id: int, user_in: UserUpdate, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -37,7 +37,7 @@ def update_profile(user_id: int, user_in: UserUpdate, db: Session = Depends(get_
 
 
 @router.put("/profile/{user_id}/change-password")
-def change_password(user_id: int, data: ChangePassword, db: Session = Depends(get_db)):
+async def change_password(user_id: int, data: ChangePassword, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -51,3 +51,33 @@ def change_password(user_id: int, data: ChangePassword, db: Session = Depends(ge
     user.password = pwd_context.hash(data.new_password)
     db.commit()
     return {"message": "Password updated successfully"}
+
+@router.get("/profile/{user_id}", response_model=UserResponse)
+async def get_profile(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+@router.put("/{user_id}/ban")
+async def ban_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.valid = False
+    db.commit()
+
+    return {"message": "User has been banned"}
+
+@router.put("/{user_id}/active")
+async def active_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.valid = True
+    db.commit()
+
+    return {"message": "User has been activated"}
+

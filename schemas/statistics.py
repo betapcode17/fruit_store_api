@@ -19,3 +19,19 @@ class TopFruit(BaseModel):
 class RevenueFruit(BaseModel):
     name: str
     total_revenue: float
+
+class TopSeller(BaseModel):
+    user_id: int
+    name: str
+    total_revenue: float
+
+    class Config:
+        from_attributes = True
+
+class TopCustomer(BaseModel):
+    cus_id: int
+    name: str
+    total_revenue: float
+
+    class Config:
+        from_attributes = True
