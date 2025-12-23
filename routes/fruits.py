@@ -18,7 +18,7 @@ router = APIRouter(
 
 # add new fruit
 @router.post("/", response_model=FruitResponse)
-def create_fruit(fruit_in: FruitCreate, db: Session = Depends(get_db)):
+async def create_fruit(fruit_in: FruitCreate, db: Session = Depends(get_db)):
     fruit = Fruit(**fruit_in.dict())
     db.add(fruit)
     db.commit()
@@ -28,13 +28,13 @@ def create_fruit(fruit_in: FruitCreate, db: Session = Depends(get_db)):
 
 # get all fruits
 @router.get("/", response_model=list[FruitResponse])
-def list_fruits(db: Session = Depends(get_db)):
+async def list_fruits(db: Session = Depends(get_db)):
     return db.query(Fruit).all()
 
 
 # delete fruit by id
 @router.delete("/{fruit_id}")
-def delete_fruit(fruit_id: int, db: Session = Depends(get_db)):
+async def delete_fruit(fruit_id: int, db: Session = Depends(get_db)):
     fruit = db.query(Fruit).filter(Fruit.id == fruit_id).first()
     if not fruit:
         raise HTTPException(status_code=404, detail="Fruit not found")
@@ -45,7 +45,7 @@ def delete_fruit(fruit_id: int, db: Session = Depends(get_db)):
 
 # update fruit
 @router.put("/{fruit_id}", response_model=FruitResponse)
-def update_fruit(fruit_id: int, fruit_in: FruitUpdate, db: Session = Depends(get_db)):
+async def update_fruit(fruit_id: int, fruit_in: FruitUpdate, db: Session = Depends(get_db)):
     fruit = db.query(Fruit).filter(Fruit.id == fruit_id).first()
     if not fruit:
         raise HTTPException(status_code=404, detail="Fruit not found")
@@ -58,7 +58,7 @@ def update_fruit(fruit_id: int, fruit_in: FruitUpdate, db: Session = Depends(get
 
 # get detail fruit by id
 @router.get("/{fruit_id}", response_model=FruitResponse)
-def detail_fruit(fruit_id: int, db: Session = Depends(get_db)):
+async def detail_fruit(fruit_id: int, db: Session = Depends(get_db)):
     fruit = db.query(Fruit).filter(Fruit.id == fruit_id).first()
     if not fruit:
         raise HTTPException(status_code=404, detail="Fruit not found")
@@ -67,7 +67,7 @@ def detail_fruit(fruit_id: int, db: Session = Depends(get_db)):
 
 # search fruit by keyword
 @router.get("/search", response_model=list[FruitResponse])
-def search_fruit(keyword: str, db: Session = Depends(get_db)):
+async def search_fruit(keyword: str, db: Session = Depends(get_db)):
     fruits = db.query(Fruit).filter(
         or_(
             Fruit.name.ilike(f"%{keyword}%"),

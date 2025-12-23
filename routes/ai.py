@@ -168,7 +168,7 @@ async def upload_result(
 
 
 # ---- Phân tích file JSON + ảnh ----
-def analyze_files(base_url: str = "https://yoursubdomain.loca.lt"):
+async def analyze_files(base_url: str = "https://yoursubdomain.loca.lt"):
     results = {}
     json_files = [f for f in os.listdir(JSON_DIR) if f.endswith(".json")]
 

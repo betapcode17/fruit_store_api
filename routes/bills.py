@@ -16,7 +16,7 @@ router = APIRouter(tags=["Bills"])
 import shutil
 
 @router.post("/bill", response_model=BillResponse)
-def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
+async def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
     total_cost = 0
     bill_details_list = []
 
@@ -95,7 +95,7 @@ def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
 
 #  GET /ViewAllBill — xem tất cả hóa đơn
 @router.get("/ViewAllBill", response_model=List[BillResponse])
-def view_all_bills(db: Session = Depends(get_db)):
+async def view_all_bills(db: Session = Depends(get_db)):
     bills = db.query(Bill).all()
     all_bills = []
 
@@ -130,7 +130,7 @@ def view_all_bills(db: Session = Depends(get_db)):
 
 #  PUT /bill/{bill_id} — cập nhật hóa đơn
 @router.put("/bill/{bill_id}", response_model=BillResponse)
-def update_bill(bill_id: int, bill_in: BillCreate, db: Session = Depends(get_db)):
+async def update_bill(bill_id: int, bill_in: BillCreate, db: Session = Depends(get_db)):
     bill = db.query(Bill).filter(Bill.bill_id == bill_id).first()
     if not bill:
         raise HTTPException(status_code=404, detail="Bill not found")
@@ -189,7 +189,7 @@ def update_bill(bill_id: int, bill_in: BillCreate, db: Session = Depends(get_db)
 
 # DELETE /bill/{bill_id} — xóa hóa đơn
 @router.delete("/bill/{bill_id}")
-def delete_bill(bill_id: int, db: Session = Depends(get_db)):
+async def delete_bill(bill_id: int, db: Session = Depends(get_db)):
     bill = db.query(Bill).filter(Bill.bill_id == bill_id).first()
     if not bill:
         raise HTTPException(status_code=404, detail="Bill not found")
@@ -202,6 +202,6 @@ def delete_bill(bill_id: int, db: Session = Depends(get_db)):
 
 #  GET /sales — tổng doanh thu
 @router.get("/sales")
-def total_sales(db: Session = Depends(get_db)):
+async def total_sales(db: Session = Depends(get_db)):
     total = db.query(func.sum(Bill.total_cost)).scalar() or 0
     return {"total_sales": total}
