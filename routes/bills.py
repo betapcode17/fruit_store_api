@@ -20,27 +20,40 @@ async def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
     total_cost = 0
     bill_details_list = []
 
-    # 1️⃣ Kiểm tra Customer tồn tại
-    customer = db.query(Customer).filter(Customer.cus_id == bill_in.cus_id).first()
-    if not customer:
-        raise HTTPException(status_code=404, detail=f"Customer ID {bill_in.cus_id} not found")
+    customer = None
 
-    # 2️⃣ Tạo Bill mới
+    # 1️⃣ CHỈ KIỂM TRA CUSTOMER NẾU CÓ cus_id
+    if bill_in.cus_id is not None:
+        customer = (
+            db.query(Customer)
+            .filter(Customer.cus_id == bill_in.cus_id)
+            .first()
+        )
+        if not customer:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Customer ID {bill_in.cus_id} not found"
+            )
+
+    # 2️⃣ TẠO BILL (cus_id có thể NULL)
     bill = Bill(
         user_id=bill_in.user_id,
         date=datetime.utcnow(),
         total_cost=0,
-        cus_id=bill_in.cus_id
+        cus_id=bill_in.cus_id   # NULL hoặc có giá trị đều OK
     )
     db.add(bill)
     db.commit()
     db.refresh(bill)
 
-    # 3️⃣ Thêm chi tiết Bill
+    # 3️⃣ THÊM CHI TIẾT BILL
     for item in bill_in.items:
         fruit = db.query(Fruit).filter(Fruit.id == item.fruit_id).first()
         if not fruit:
-            raise HTTPException(status_code=404, detail=f"Fruit ID {item.fruit_id} not found")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Fruit ID {item.fruit_id} not found"
+            )
 
         price = fruit.price * item.weight
         total_cost += price
@@ -54,27 +67,34 @@ async def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
         db.add(detail)
         bill_details_list.append(detail)
 
-    # 4️⃣ Cập nhật tổng tiền
+    # 4️⃣ CẬP NHẬT TỔNG TIỀN
     bill.total_cost = total_cost
-    customer.moneySpent += total_cost
+
+    # 🔥 CHỈ CỘNG TIỀN NẾU CÓ CUSTOMER
+    if customer:
+        customer.moneySpent += total_cost
+
     db.commit()
 
     for d in bill_details_list:
         db.refresh(d)
 
-    # 5️⃣ Chuẩn bị dữ liệu trả về
+    # 5️⃣ RESPONSE DETAILS
     response_details = [
         BillDetailResponse(
             detail_id=d.detail_id,
             fruit_id=d.fruit_id,
-            fruit_name=db.query(Fruit).filter(Fruit.id == d.fruit_id).first().name,
+            fruit_name=db.query(Fruit)
+                .filter(Fruit.id == d.fruit_id)
+                .first()
+                .name,
             weight=d.weight,
             price=d.price
         )
         for d in bill_details_list
     ]
 
-    # 6️⃣ ✅ Xóa toàn bộ file trong thư mục json_results và uploads sau khi tạo bill thành công
+    # 6️⃣ XOÁ FILE SAU KHI TẠO BILL
     JSON_DIR = "json_results"
     UPLOAD_DIR = "uploads"
 
@@ -88,7 +108,7 @@ async def create_bill(bill_in: BillCreate, db: Session = Depends(get_db)):
         bill_id=bill.bill_id,
         date=str(bill.date),
         user_id=bill.user_id,
-        cus_id=bill.cus_id,
+        cus_id=bill.cus_id,   # có thể null
         total_cost=total_cost,
         bill_details=response_details
     )

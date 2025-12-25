@@ -31,7 +31,8 @@ class TopSeller(BaseModel):
 class TopCustomer(BaseModel):
     cus_id: int
     name: str
-    total_revenue: float
+    phone: str
+    moneySpent: float
 
     class Config:
         from_attributes = True
