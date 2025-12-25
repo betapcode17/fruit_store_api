@@ -56,13 +56,6 @@ async def update_fruit(fruit_id: int, fruit_in: FruitUpdate, db: Session = Depen
     return fruit
 
 
-# get detail fruit by id
-@router.get("/{fruit_id}", response_model=FruitResponse)
-async def detail_fruit(fruit_id: int, db: Session = Depends(get_db)):
-    fruit = db.query(Fruit).filter(Fruit.id == fruit_id).first()
-    if not fruit:
-        raise HTTPException(status_code=404, detail="Fruit not found")
-    return fruit
 
 
 # search fruit by keyword
@@ -77,3 +70,26 @@ async def search_fruit(keyword: str, db: Session = Depends(get_db)):
     if not fruits:
         raise HTTPException(status_code=404, detail="No fruits found")
     return fruits
+
+
+
+@router.get("/id-by-name")
+async def get_fruit_id_by_name(name: str, db: Session = Depends(get_db)):
+    fruit = (
+        db.query(Fruit)
+        .filter(Fruit.name.ilike(name))
+        .first()
+    )
+
+    if not fruit:
+        raise HTTPException(status_code=404, detail="Fruit not found")
+
+    return fruit.id
+
+# get detail fruit by id
+@router.get("/{fruit_id}", response_model=FruitResponse)
+async def detail_fruit(fruit_id: int, db: Session = Depends(get_db)):
+    fruit = db.query(Fruit).filter(Fruit.id == fruit_id).first()
+    if not fruit:
+        raise HTTPException(status_code=404, detail="Fruit not found")
+    return fruit

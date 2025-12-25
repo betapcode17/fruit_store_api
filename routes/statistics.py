@@ -97,11 +97,11 @@ async def top_customers(limit: int = 5, db: Session = Depends(get_db)):
         db.query(
             Customer.cus_id.label("cus_id"),
             Customer.name.label("name"),
-            func.sum(Bill.total_cost).label("total_revenue")
+             Customer.phone.label("phone"),
+            func.sum(Customer.moneySpent).label("moneySpent")
         )
-        .join(Bill, Bill.cus_id == Customer.cus_id)
-        .group_by(Customer.cus_id, Customer.name)
-        .order_by(func.sum(Bill.total_cost).desc())
+        .group_by(Customer.cus_id, Customer.name, Customer.phone)
+        .order_by(func.sum(Customer.moneySpent).desc())
         .limit(limit)
         .all()
     )

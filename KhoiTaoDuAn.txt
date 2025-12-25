@@ -30,7 +30,7 @@ pip install "passlib[bcrypt]"
 # if __name__ == "__main__":
 #     init_db()
 # uvicorn main:app --reload chay du an
-# lt --port 8000 --subdomain yoursubdomain
+# lt --port 8000 --subdomain fruitstore
 
 
 {

@@ -4,7 +4,6 @@ from pydantic import BaseModel
 class BillDetailCreate(BaseModel):
     fruit_id: int
     weight: float
-    price: float
 
 # Dùng khi trả về kết quả bill
 class BillDetailResponse(BaseModel):
